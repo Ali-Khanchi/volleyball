@@ -18,8 +18,8 @@ function Section({ title, note, children }) {
 
 function MatchCard({ m, highlight = false }) {
   const sides = [
-    { name: m.a, hint: m.hintA, score: m.setsA, won: m.done && m.win === 0 },
-    { name: m.b, hint: m.hintB, score: m.setsB, won: m.done && m.win === 1 }
+    { name: m.a, hint: m.hintA, score: m.ptsA, won: m.done && m.win === 0 },
+    { name: m.b, hint: m.hintB, score: m.ptsB, won: m.done && m.win === 1 }
   ];
   return (
     <div
@@ -45,18 +45,20 @@ function MatchCard({ m, highlight = false }) {
               {s.name ?? s.hint}
             </span>
             <span className="shrink-0 text-2xl font-extrabold tabular-nums">
-              {m.sets.length ? s.score : '–'}
+              {m.sets.length ? s.score : '-'}
             </span>
           </div>
         ))}
       </div>
-      {m.sets.length > 0 && (
-        <p className="mt-3 break-words text-sm tabular-nums text-sand/60">
-          {m.sets.map(([x, y]) => `${x}–${y}`).join(', ')}
+      {/* {m.sets.length > 0 && (
+        <p className="mt-3 wrap-break-word text-sm tabular-nums text-sand/60">
+          {m.sets.map(([x, y]) => `${x}-${y}`).join(', ')}
         </p>
-      )}
+      )} */}
       {m.refs && (
-        <p className="mt-2 break-words text-xs text-sand/50">Refs: {m.refs}</p>
+        <p className="mt-2 wrap-break-word text-xs text-sand/50">
+          Refs: {m.refs}
+        </p>
       )}
     </div>
   );
@@ -65,7 +67,7 @@ function MatchCard({ m, highlight = false }) {
 /* Header labels: short on phones, full on larger screens */
 function Head({ short, full, className = '' }) {
   return (
-    <span className={`text-right ${className}`}>
+    <span className={`text-center ${className}`}>
       <span className="sm:hidden">{short}</span>
       <span className="hidden sm:inline">{full}</span>
     </span>
@@ -76,9 +78,9 @@ function Standings({ rows, seeded }) {
   // Fixed-width stat columns so every row lines up; the team column takes the
   // remaining space and wraps. "Played" is hidden on phones to save room.
   const cols =
-    'grid items-center gap-x-1.5 px-3 sm:gap-x-2 sm:px-4 ' +
-    'grid-cols-[minmax(0,1fr)_1.5rem_1.5rem_2.75rem_3.5rem] ' +
-    'sm:grid-cols-[minmax(0,1fr)_3.5rem_3rem_3rem_4rem_5rem]';
+    'grid items-center gap-x-1 px-3 sm:gap-x-2 sm:px-4 ' +
+    'grid-cols-[minmax(0,1fr)_1.5rem_1.5rem_1.5rem_1.5rem_1.5rem_1.5rem_1.5rem] ' +
+    'sm:grid-cols-[minmax(0,1fr)_3.5rem_3rem_3rem_3rem_3rem_4rem_5rem]';
 
   return (
     <div
@@ -92,10 +94,12 @@ function Standings({ rows, seeded }) {
         <span role="columnheader" className="font-medium">
           Team
         </span>
-        <Head short="P" full="Played" className="hidden font-medium sm:block" />
+        <Head short="MP" full="Played" className="font-medium" />
         <Head short="W" full="Won" className="font-medium" />
         <Head short="L" full="Lost" className="font-medium" />
-        <Head short="Sets" full="Sets" className="font-medium" />
+        <Head short="GF" full="GF" className="font-medium" />
+        <Head short="GA" full="GA" className="font-medium" />
+        <Head short="GD" full="GD" className="font-medium" />{' '}
         <Head short="Pts" full="Points" className="font-medium" />
       </div>
 
@@ -114,25 +118,23 @@ function Standings({ rows, seeded }) {
               {i + 1}
             </span>
             <div className="min-w-0">
-              <div className="break-words font-semibold leading-tight">
+              <div className="wrap-break-word font-semibold leading-tight">
                 {r.team}
               </div>
               {r.players.length > 0 && (
-                <div className="mt-0.5 break-words text-xs leading-snug text-sand/60 sm:text-sm">
+                <div className="mt-0.5 wrap-break-word text-xs leading-snug text-sand/60 sm:text-sm">
                   {r.players.join(', ')}
                 </div>
               )}
             </div>
           </div>
-          <span className="hidden text-right sm:block">{r.p}</span>
-          <span className="text-right font-bold">{r.w}</span>
-          <span className="text-right">{r.l}</span>
-          <span className="text-right">
-            {r.sw}–{r.sl}
-          </span>
-          <span className="text-right">
-            {r.pf}–{r.pa}
-          </span>
+          <span className="text-center">{r.p}</span>
+          <span className="text-center font-bold">{r.w}</span>
+          <span className="text-center">{r.l}</span>
+          <span className="text-center">{r.pf}</span>
+          <span className="text-center">{r.pa}</span>
+          <span className="text-center">{r.pf - r.pa}</span>
+          <span className="text-center font-bold">{r.w * 3}</span>
         </div>
       ))}
     </div>
@@ -173,7 +175,7 @@ export default function App() {
   if (!data) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-        <p className="break-words text-sand/70">
+        <p className="wrap-break-word text-sand/70">
           {error
             ? `Couldn't load tournament.md (${error}). Check that it is in the public folder.`
             : 'Loading tournament…'}
@@ -199,7 +201,7 @@ export default function App() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16">
       <header>
-        <h1 className="break-words text-4xl font-extrabold tracking-tight sm:text-7xl">
+        <h1 className="wrap-break-word text-4xl font-extrabold tracking-tight sm:text-7xl">
           {title}
         </h1>
       </header>
@@ -211,7 +213,7 @@ export default function App() {
       )}
 
       {warnings.length > 0 && (
-        <ul className="mt-6 space-y-1 break-words rounded-xl bg-sun/15 p-4 text-sm ring-1 ring-sun/40">
+        <ul className="mt-6 space-y-1 wrap-break-word rounded-xl bg-sun/15 p-4 text-sm ring-1 ring-sun/40">
           {warnings.map((w) => (
             <li key={w}>{w}</li>
           ))}
@@ -221,7 +223,7 @@ export default function App() {
       {champion && (
         <div className="mt-8 rounded-3xl bg-sun p-5 text-sea-950 sm:p-8">
           <p className="text-lg font-medium">Tournament champions</p>
-          <p className="break-words text-3xl font-extrabold tracking-tight sm:text-6xl">
+          <p className="wrap-break-word text-3xl font-extrabold tracking-tight sm:text-6xl">
             {champion}
           </p>
         </div>

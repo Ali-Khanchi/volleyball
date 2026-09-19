@@ -20,19 +20,19 @@ HOW TO EDIT
 
 ## Round Robin
 
-- Team Kazzaz vs Team Dawoud:
-- Team Fadhil vs Team Najim:
-- Team Fadhil vs Team Kazzaz:
-- Team Dawoud vs Team Najim:
-- Team Kazzaz vs Team Najim:
-- Team Fadhil vs Team Dawoud:
+- Team Kazzaz vs Team Dawoud: 11-7
+- Team Fadhil vs Team Najim: 11-0
+- Team Fadhil vs Team Kazzaz: 11-0
+- Team Dawoud vs Team Najim: 11-9
+- Team Kazzaz vs Team Najim: 11-6
+- Team Fadhil vs Team Dawoud: 11-0
 
 ## Knockout
 
-- Semi 1:
-- Semi 2:
-- Third place:
-- Final:
+- Semi 1: 11-0
+- Semi 2: 11-8
+- Third place: 9-11
+- Final: 11-0
 
 ## Refs
 
@@ -42,7 +42,7 @@ HOW TO EDIT
 - Match 4: Ali F & Mehdi
 - Match 5: Ali F & Emad
 - Match 6: Kazaz & Emad
-- Semi 1: 
+- Semi 1:
 - Semi 2:
 - Third place:
 - Final:
