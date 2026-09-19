@@ -30,7 +30,7 @@ HOW TO EDIT
 ## Knockout
 
 - Semi 1: 7-11
-- Semi 2:
+- Semi 2: 7-11
 - Third place:
 - Final:
 
