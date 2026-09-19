@@ -21,7 +21,7 @@ HOW TO EDIT
 ## Round Robin
 
 - Team Kazzaz vs Team Dawoud: 11-8
-- Team Fadhil vs Team Najim:
+- Team Fadhil vs Team Najim: 11-5
 - Team Fadhil vs Team Kazzaz:
 - Team Dawoud vs Team Najim:
 - Team Kazzaz vs Team Najim:
