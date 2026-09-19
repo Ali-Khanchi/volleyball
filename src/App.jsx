@@ -200,10 +200,30 @@ export default function App() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16">
-      <header>
+      <header className="flex items-start justify-between gap-4">
         <h1 className="wrap-break-word text-4xl font-extrabold tracking-tight sm:text-7xl">
           {title}
         </h1>
+        <button
+          type="button"
+          onClick={() => location.reload()}
+          aria-label="Refresh"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-sand/80 transition hover:bg-white/20 active:scale-95 sm:size-11"
+        >
+          <svg
+            className="size-4 sm:size-5"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M16 10a6 6 0 1 1-1.76-4.24" />
+            <path d="M16 3v4h-4" />
+          </svg>
+        </button>
       </header>
 
       {error && (
