@@ -6,8 +6,8 @@ const REFRESH_MS = 15000;
 
 function Section({ title, note, children }) {
   return (
-    <section className="mt-12">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4">
+    <section className="mt-10 sm:mt-12">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
         {note && <p className="text-sm text-sand/60">{note}</p>}
       </div>
@@ -23,11 +23,11 @@ function MatchCard({ m, highlight = false }) {
   ];
   return (
     <div
-      className={`rounded-2xl bg-sea-900 p-4 ring-1 ${highlight ? 'ring-2 ring-sun/70' : 'ring-white/10'}`}
+      className={`min-w-0 rounded-2xl bg-sea-900 p-3 ring-1 sm:p-4 ${highlight ? 'ring-2 ring-sun/70' : 'ring-white/10'}`}
     >
-      <div className="mb-3 flex items-center justify-between text-sm text-sand/60">
-        <span className="font-medium">{m.label}</span>
-        <span className={m.done ? 'text-sun' : ''}>
+      <div className="mb-3 flex items-center justify-between gap-2 text-sm text-sand/60">
+        <span className="min-w-0 truncate font-medium">{m.label}</span>
+        <span className={`shrink-0 ${m.done ? 'text-sun' : ''}`}>
           {m.done ? 'Finished' : 'Not played yet'}
         </span>
       </div>
@@ -44,14 +44,14 @@ function MatchCard({ m, highlight = false }) {
             >
               {s.name ?? s.hint}
             </span>
-            <span className="text-2xl font-extrabold tabular-nums">
+            <span className="shrink-0 text-2xl font-extrabold tabular-nums">
               {m.sets.length ? s.score : '–'}
             </span>
           </div>
         ))}
       </div>
       {m.sets.length > 0 && (
-        <p className="mt-3 text-sm tabular-nums text-sand/60">
+        <p className="mt-3 break-words text-sm tabular-nums text-sand/60">
           {m.sets.map(([x, y]) => `${x}–${y}`).join(', ')}
         </p>
       )}
@@ -59,57 +59,79 @@ function MatchCard({ m, highlight = false }) {
   );
 }
 
-function Standings({ rows, seeded }) {
-  const th = 'px-2 py-3 text-right font-medium';
-  const td = 'px-2 py-3 text-right tabular-nums';
+/* Header labels: short on phones, full on larger screens */
+function Head({ short, full, className = '' }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-sea-900 ring-1 ring-white/10">
-      <table className="w-full min-w-110 text-left">
-        <thead className="text-sm text-sand/60">
-          <tr>
-            <th className="py-3 pl-4 pr-2 font-medium">Team</th>
-            <th className={th}>Played</th>
-            <th className={th}>Won</th>
-            <th className={th}>Lost</th>
-            <th className={th}>Sets</th>
-            <th className={`${th} pr-4`}>Points</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.team} className="border-t border-white/10">
-              <td className="py-3 pl-4 pr-2">
-                <div className="flex items-center">
-                  <span
-                    className={`mr-3 inline-grid size-7 shrink-0 place-items-center rounded-full text-sm font-semibold ${
-                      seeded && i === 0 ? 'bg-sun text-sea-950' : 'bg-white/10'
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  <div>
-                    <div className="font-semibold">{r.team}</div>
-                    {r.players.length > 0 && (
-                      <div className="text-sm text-sand/60">
-                        {r.players.join(', ')}
-                      </div>
-                    )}
-                  </div>
+    <span className={`text-right ${className}`}>
+      <span className="sm:hidden">{short}</span>
+      <span className="hidden sm:inline">{full}</span>
+    </span>
+  );
+}
+
+function Standings({ rows, seeded }) {
+  // Fixed-width stat columns so every row lines up; the team column takes the
+  // remaining space and wraps. "Played" is hidden on phones to save room.
+  const cols =
+    'grid items-center gap-x-1.5 px-3 sm:gap-x-2 sm:px-4 ' +
+    'grid-cols-[minmax(0,1fr)_1.5rem_1.5rem_2.75rem_3.5rem] ' +
+    'sm:grid-cols-[minmax(0,1fr)_3.5rem_3rem_3rem_4rem_5rem]';
+
+  return (
+    <div
+      role="table"
+      className="overflow-hidden rounded-2xl bg-sea-900 ring-1 ring-white/10"
+    >
+      <div
+        role="row"
+        className={`${cols} py-3 text-xs text-sand/60 sm:text-sm`}
+      >
+        <span role="columnheader" className="font-medium">
+          Team
+        </span>
+        <Head short="P" full="Played" className="hidden font-medium sm:block" />
+        <Head short="W" full="Won" className="font-medium" />
+        <Head short="L" full="Lost" className="font-medium" />
+        <Head short="Sets" full="Sets" className="font-medium" />
+        <Head short="Pts" full="Points" className="font-medium" />
+      </div>
+
+      {rows.map((r, i) => (
+        <div
+          key={r.team}
+          role="row"
+          className={`${cols} border-t border-white/10 py-3 text-sm tabular-nums sm:text-base`}
+        >
+          <div className="flex min-w-0 items-center">
+            <span
+              className={`mr-2 inline-grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold sm:mr-3 sm:size-7 sm:text-sm ${
+                seeded && i === 0 ? 'bg-sun text-sea-950' : 'bg-white/10'
+              }`}
+            >
+              {i + 1}
+            </span>
+            <div className="min-w-0">
+              <div className="break-words font-semibold leading-tight">
+                {r.team}
+              </div>
+              {r.players.length > 0 && (
+                <div className="mt-0.5 break-words text-xs leading-snug text-sand/60 sm:text-sm">
+                  {r.players.join(', ')}
                 </div>
-              </td>
-              <td className={td}>{r.p}</td>
-              <td className={`${td} font-bold`}>{r.w}</td>
-              <td className={td}>{r.l}</td>
-              <td className={td}>
-                {r.sw}–{r.sl}
-              </td>
-              <td className={`${td} pr-4`}>
-                {r.pf}–{r.pa}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              )}
+            </div>
+          </div>
+          <span className="hidden text-right sm:block">{r.p}</span>
+          <span className="text-right font-bold">{r.w}</span>
+          <span className="text-right">{r.l}</span>
+          <span className="text-right">
+            {r.sw}–{r.sl}
+          </span>
+          <span className="text-right">
+            {r.pf}–{r.pa}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -148,7 +170,7 @@ export default function App() {
   if (!data) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-        <p className="text-sand/70">
+        <p className="break-words text-sand/70">
           {error
             ? `Couldn't load tournament.md (${error}). Check that it is in the public folder.`
             : 'Loading tournament…'}
@@ -172,9 +194,9 @@ export default function App() {
   } = data;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16">
       <header>
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl">
+        <h1 className="break-words text-4xl font-extrabold tracking-tight sm:text-7xl">
           {title}
         </h1>
       </header>
@@ -186,7 +208,7 @@ export default function App() {
       )}
 
       {warnings.length > 0 && (
-        <ul className="mt-6 space-y-1 rounded-xl bg-sun/15 p-4 text-sm ring-1 ring-sun/40">
+        <ul className="mt-6 space-y-1 break-words rounded-xl bg-sun/15 p-4 text-sm ring-1 ring-sun/40">
           {warnings.map((w) => (
             <li key={w}>{w}</li>
           ))}
@@ -194,9 +216,9 @@ export default function App() {
       )}
 
       {champion && (
-        <div className="mt-8 rounded-3xl bg-sun p-6 text-sea-950 sm:p-8">
+        <div className="mt-8 rounded-3xl bg-sun p-5 text-sea-950 sm:p-8">
           <p className="text-lg font-medium">Tournament champions</p>
-          <p className="text-4xl font-extrabold tracking-tight sm:text-6xl">
+          <p className="break-words text-3xl font-extrabold tracking-tight sm:text-6xl">
             {champion}
           </p>
         </div>
@@ -211,28 +233,69 @@ export default function App() {
         }
       >
         <Standings rows={standings} seeded={rrDone} />
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rrMatches.map((m) => (
-            <MatchCard key={m.label} m={m} />
-          ))}
-        </div>
+        <details
+          open
+          className="group mt-4 rounded-3xl bg-sea-800/40 ring-1 ring-white/10"
+        >
+          <summary className="flex cursor-pointer list-none items-center gap-4 rounded-3xl px-4 py-4 sm:px-5 [&::-webkit-details-marker]:hidden">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="text-lg font-bold">Group stage</span>
+                <span className="text-sm text-sand/60">
+                  {rrPlayed} of {rrMatches.length} played
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-sun transition-all"
+                  style={{
+                    width: `${rrMatches.length ? (rrPlayed / rrMatches.length) * 100 : 0}%`
+                  }}
+                />
+              </div>
+            </div>
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10">
+              <svg
+                className="size-4 transition-transform group-open:rotate-180"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 8l5 5 5-5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </summary>
+
+          <div className="grid grid-cols-1 gap-3 px-3 pb-3 sm:grid-cols-2 sm:gap-4 sm:px-4 sm:pb-4 lg:grid-cols-3">
+            {rrMatches.map((m) => (
+              <MatchCard key={m.label} m={m} />
+            ))}
+          </div>
+        </details>
       </Section>
 
       <Section
         title="Knockout"
         note="1st plays 4th, 2nd plays 3rd. Winners meet in the final."
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="min-w-0 space-y-4">
             <MatchCard m={semi1} />
             <MatchCard m={semi2} />
           </div>
-          <div className="flex flex-col justify-center gap-4">
-            <MatchCard m={final} highlight />
+          <div className="flex min-w-0 flex-col justify-center gap-4">
             <MatchCard m={third} />
+            <MatchCard m={final} highlight />
           </div>
         </div>
       </Section>
     </main>
   );
 }
+``;
