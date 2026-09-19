@@ -23,7 +23,7 @@ HOW TO EDIT
 - Team Kazzaz vs Team Dawoud: 11-8
 - Team Fadhil vs Team Najim: 11-5
 - Team Fadhil vs Team Kazzaz: 11-6
-- Team Dawoud vs Team Najim:
+- Team Dawoud vs Team Najim: 11-9
 - Team Kazzaz vs Team Najim:
 - Team Fadhil vs Team Dawoud:
 
