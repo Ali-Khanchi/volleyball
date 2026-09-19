@@ -11,7 +11,10 @@ export function parseScores(text = '') {
 }
 
 function result(sets) {
-  let setsA = 0, setsB = 0, ptsA = 0, ptsB = 0;
+  let setsA = 0,
+    setsB = 0,
+    ptsA = 0,
+    ptsB = 0;
   for (const [x, y] of sets) {
     if (x > y) setsA++;
     else if (y > x) setsB++;
@@ -19,23 +22,41 @@ function result(sets) {
     ptsB += y;
   }
   const win = setsA > setsB ? 0 : setsB > setsA ? 1 : null;
-  return { sets, setsA, setsB, ptsA, ptsB, win, done: sets.length > 0 && win !== null };
+  return {
+    sets,
+    setsA,
+    setsB,
+    ptsA,
+    ptsB,
+    win,
+    done: sets.length > 0 && win !== null
+  };
 }
 
 function makeTie(label, a, b, scoreText, hintA, hintB) {
   const r = result(a && b ? parseScores(scoreText) : []);
   return {
-    label, a, b, hintA, hintB, ...r,
+    label,
+    a,
+    b,
+    hintA,
+    hintB,
+    ...r,
     winner: r.done ? [a, b][r.win] : null,
-    loser: r.done ? [a, b][1 - r.win] : null,
+    loser: r.done ? [a, b][1 - r.win] : null
   };
 }
 
 const KO_ALIASES = {
-  semi1: 'semi1', semifinal1: 'semi1',
-  semi2: 'semi2', semifinal2: 'semi2',
-  third: 'third', thirdplace: 'third', '3rdplace': 'third', bronze: 'third',
-  final: 'final',
+  semi1: 'semi1',
+  semifinal1: 'semi1',
+  semi2: 'semi2',
+  semifinal2: 'semi2',
+  third: 'third',
+  thirdplace: 'third',
+  '3rdplace': 'third',
+  bronze: 'third',
+  final: 'final'
 };
 
 export function parseTournament(md) {
@@ -56,8 +77,23 @@ export function parseTournament(md) {
     }
   }
 
-  const teams = sections.teams ?? [];
-  if (teams.length !== 4) warnings.push('Add exactly 4 teams under "## Teams".');
+  const teamLines = sections.teams ?? [];
+  const teams = teamLines.map((l) => l.split(':')[0].trim());
+  const players = Object.fromEntries(
+    teamLines.map((l) => {
+      const [name, ...rest] = l.split(':');
+      return [
+        name.trim(),
+        rest
+          .join(':')
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean)
+      ];
+    })
+  );
+  if (teams.length !== 4)
+    warnings.push('Add exactly 4 teams under "## Teams".');
   const byName = Object.fromEntries(teams.map((t) => [norm(t), t]));
 
   // round robin
@@ -68,7 +104,9 @@ export function parseTournament(md) {
     const a = m && byName[norm(m[1])];
     const b = m && byName[norm(m[2])];
     if (!a || !b || a === b) {
-      warnings.push(`Can't read round robin line: "${line}" (check the team names)`);
+      warnings.push(
+        `Can't read round robin line: "${line}" (check the team names)`
+      );
       continue;
     }
     rr.set(pairKey(a, b), { a, b, ...result(parseScores(m[3] ?? '')) });
@@ -80,27 +118,57 @@ export function parseTournament(md) {
       if (!rr.has(k)) rr.set(k, { a: teams[i], b: teams[j], ...result([]) });
     }
   }
-  const rrMatches = [...rr.values()].map((m, i) => ({ ...m, label: `Match ${i + 1}` }));
+  const rrMatches = [...rr.values()].map((m, i) => ({
+    ...m,
+    label: `Match ${i + 1}`
+  }));
   const rrPlayed = rrMatches.filter((m) => m.done).length;
   const rrDone = teams.length === 4 && rrPlayed === rrMatches.length;
 
   // standings: wins, then set difference, then point difference
   const table = Object.fromEntries(
-    teams.map((t) => [t, { team: t, p: 0, w: 0, l: 0, sw: 0, sl: 0, pf: 0, pa: 0 }]),
+    teams.map((t) => [
+      t,
+      {
+        team: t,
+        players: players[t],
+        p: 0,
+        w: 0,
+        l: 0,
+        sw: 0,
+        sl: 0,
+        pf: 0,
+        pa: 0
+      }
+    ])
   );
   for (const m of rrMatches.filter((m) => m.done)) {
-    const A = table[m.a], B = table[m.b];
-    A.p++; B.p++;
-    A.sw += m.setsA; A.sl += m.setsB; A.pf += m.ptsA; A.pa += m.ptsB;
-    B.sw += m.setsB; B.sl += m.setsA; B.pf += m.ptsB; B.pa += m.ptsA;
-    if (m.win === 0) { A.w++; B.l++; } else { B.w++; A.l++; }
+    const A = table[m.a],
+      B = table[m.b];
+    A.p++;
+    B.p++;
+    A.sw += m.setsA;
+    A.sl += m.setsB;
+    A.pf += m.ptsA;
+    A.pa += m.ptsB;
+    B.sw += m.setsB;
+    B.sl += m.setsA;
+    B.pf += m.ptsB;
+    B.pa += m.ptsA;
+    if (m.win === 0) {
+      A.w++;
+      B.l++;
+    } else {
+      B.w++;
+      A.l++;
+    }
   }
   const standings = Object.values(table).sort(
     (x, y) =>
       y.w - x.w ||
       y.sw - y.sl - (x.sw - x.sl) ||
       y.pf - y.pa - (x.pf - x.pa) ||
-      x.team.localeCompare(y.team),
+      x.team.localeCompare(y.team)
   );
   const seeds = rrDone ? standings.map((r) => r.team) : [];
 
@@ -110,15 +178,57 @@ export function parseTournament(md) {
     const m = line.match(/^(.+?)\s*(?::\s*(.*))?$/);
     const key = KO_ALIASES[slug(m[1])];
     if (!key) {
-      warnings.push(`Unknown knockout line: "${line}" (use Semi 1, Semi 2, Third place, Final)`);
+      warnings.push(
+        `Unknown knockout line: "${line}" (use Semi 1, Semi 2, Third place, Final)`
+      );
       continue;
     }
     ko[key] = m[2] ?? '';
   }
-  const semi1 = makeTie('Semi-final 1', seeds[0], seeds[3], ko.semi1, '1st in round robin', '4th in round robin');
-  const semi2 = makeTie('Semi-final 2', seeds[1], seeds[2], ko.semi2, '2nd in round robin', '3rd in round robin');
-  const third = makeTie('Third place', semi1.loser, semi2.loser, ko.third, 'Loser of semi-final 1', 'Loser of semi-final 2');
-  const final = makeTie('Final', semi1.winner, semi2.winner, ko.final, 'Winner of semi-final 1', 'Winner of semi-final 2');
+  const semi1 = makeTie(
+    'Semi-final 1',
+    seeds[0],
+    seeds[3],
+    ko.semi1,
+    '1st in round robin',
+    '4th in round robin'
+  );
+  const semi2 = makeTie(
+    'Semi-final 2',
+    seeds[1],
+    seeds[2],
+    ko.semi2,
+    '2nd in round robin',
+    '3rd in round robin'
+  );
+  const third = makeTie(
+    'Third place',
+    semi1.loser,
+    semi2.loser,
+    ko.third,
+    'Loser of semi-final 1',
+    'Loser of semi-final 2'
+  );
+  const final = makeTie(
+    'Final',
+    semi1.winner,
+    semi2.winner,
+    ko.final,
+    'Winner of semi-final 1',
+    'Winner of semi-final 2'
+  );
 
-  return { title, warnings, standings, rrMatches, rrPlayed, rrDone, semi1, semi2, third, final, champion: final.winner };
+  return {
+    title,
+    warnings,
+    standings,
+    rrMatches,
+    rrPlayed,
+    rrDone,
+    semi1,
+    semi2,
+    third,
+    final,
+    champion: final.winner
+  };
 }

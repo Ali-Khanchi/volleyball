@@ -19,7 +19,7 @@ function Section({ title, note, children }) {
 function MatchCard({ m, highlight = false }) {
   const sides = [
     { name: m.a, hint: m.hintA, score: m.setsA, won: m.done && m.win === 0 },
-    { name: m.b, hint: m.hintB, score: m.setsB, won: m.done && m.win === 1 },
+    { name: m.b, hint: m.hintB, score: m.setsB, won: m.done && m.win === 1 }
   ];
   return (
     <div
@@ -27,7 +27,9 @@ function MatchCard({ m, highlight = false }) {
     >
       <div className="mb-3 flex items-center justify-between text-sm text-sand/60">
         <span className="font-medium">{m.label}</span>
-        <span className={m.done ? 'text-sun' : ''}>{m.done ? 'Finished' : 'Not played yet'}</span>
+        <span className={m.done ? 'text-sun' : ''}>
+          {m.done ? 'Finished' : 'Not played yet'}
+        </span>
       </div>
       <div className="space-y-2">
         {sides.map((s, i) => (
@@ -37,10 +39,14 @@ function MatchCard({ m, highlight = false }) {
               s.won ? 'bg-sun text-sea-950' : 'bg-sea-800/60 text-sand/80'
             }`}
           >
-            <span className={`min-w-0 truncate ${s.won ? 'font-bold' : s.name ? 'font-medium' : 'italic text-sand/50'}`}>
+            <span
+              className={`min-w-0 truncate ${s.won ? 'font-bold' : s.name ? 'font-medium' : 'italic text-sand/50'}`}
+            >
               {s.name ?? s.hint}
             </span>
-            <span className="text-2xl font-extrabold tabular-nums">{m.sets.length ? s.score : '–'}</span>
+            <span className="text-2xl font-extrabold tabular-nums">
+              {m.sets.length ? s.score : '–'}
+            </span>
           </div>
         ))}
       </div>
@@ -58,7 +64,7 @@ function Standings({ rows, seeded }) {
   const td = 'px-2 py-3 text-right tabular-nums';
   return (
     <div className="overflow-x-auto rounded-2xl bg-sea-900 ring-1 ring-white/10">
-      <table className="w-full min-w-[440px] text-left">
+      <table className="w-full min-w-110 text-left">
         <thead className="text-sm text-sand/60">
           <tr>
             <th className="py-3 pl-4 pr-2 font-medium">Team</th>
@@ -72,21 +78,34 @@ function Standings({ rows, seeded }) {
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.team} className="border-t border-white/10">
-              <td className="py-3 pl-4 pr-2 font-semibold">
-                <span
-                  className={`mr-3 inline-grid size-7 place-items-center rounded-full text-sm ${
-                    seeded && i === 0 ? 'bg-sun text-sea-950' : 'bg-white/10'
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                {r.team}
+              <td className="py-3 pl-4 pr-2">
+                <div className="flex items-center">
+                  <span
+                    className={`mr-3 inline-grid size-7 shrink-0 place-items-center rounded-full text-sm font-semibold ${
+                      seeded && i === 0 ? 'bg-sun text-sea-950' : 'bg-white/10'
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div>
+                    <div className="font-semibold">{r.team}</div>
+                    {r.players.length > 0 && (
+                      <div className="text-sm text-sand/60">
+                        {r.players.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </td>
               <td className={td}>{r.p}</td>
               <td className={`${td} font-bold`}>{r.w}</td>
               <td className={td}>{r.l}</td>
-              <td className={td}>{r.sw}–{r.sl}</td>
-              <td className={`${td} pr-4`}>{r.pf}–{r.pa}</td>
+              <td className={td}>
+                {r.sw}–{r.sl}
+              </td>
+              <td className={`${td} pr-4`}>
+                {r.pf}–{r.pa}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -104,7 +123,9 @@ export default function App() {
     let stopped = false;
     const load = async () => {
       try {
-        const res = await fetch(`${SRC}?t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`${SRC}?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const parsed = parseTournament(await res.text());
         if (!stopped) {
@@ -128,24 +149,41 @@ export default function App() {
     return (
       <main className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <p className="text-sand/70">
-          {error ? `Couldn't load tournament.md (${error}). Check that it is in the public folder.` : 'Loading tournament…'}
+          {error
+            ? `Couldn't load tournament.md (${error}). Check that it is in the public folder.`
+            : 'Loading tournament…'}
         </p>
       </main>
     );
   }
 
-  const { title, warnings, standings, rrMatches, rrPlayed, rrDone, semi1, semi2, third, final, champion } = data;
+  const {
+    title,
+    warnings,
+    standings,
+    rrMatches,
+    rrPlayed,
+    rrDone,
+    semi1,
+    semi2,
+    third,
+    final,
+    champion
+  } = data;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16">
       <header>
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl">{title}</h1>
-        <p className="mt-3 text-sand/60">
-          Updated {updated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. This page refreshes on its own.
-        </p>
+        <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl">
+          {title}
+        </h1>
       </header>
 
-      {error && <p className="mt-4 text-sm text-sun">Couldn't refresh ({error}). Showing the last loaded scores.</p>}
+      {error && (
+        <p className="mt-4 text-sm text-sun">
+          Couldn't refresh ({error}). Showing the last loaded scores.
+        </p>
+      )}
 
       {warnings.length > 0 && (
         <ul className="mt-6 space-y-1 rounded-xl bg-sun/15 p-4 text-sm ring-1 ring-sun/40">
@@ -158,13 +196,19 @@ export default function App() {
       {champion && (
         <div className="mt-8 rounded-3xl bg-sun p-6 text-sea-950 sm:p-8">
           <p className="text-lg font-medium">Tournament champions</p>
-          <p className="text-4xl font-extrabold tracking-tight sm:text-6xl">{champion}</p>
+          <p className="text-4xl font-extrabold tracking-tight sm:text-6xl">
+            {champion}
+          </p>
         </div>
       )}
 
       <Section
         title="Round robin"
-        note={rrDone ? 'All matches played. Standings set the semi-finals.' : `${rrPlayed} of ${rrMatches.length} matches played. Standings are provisional.`}
+        note={
+          rrDone
+            ? 'All matches played. Standings set the semi-finals.'
+            : `${rrPlayed} of ${rrMatches.length} matches played. Standings are provisional.`
+        }
       >
         <Standings rows={standings} seeded={rrDone} />
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -174,7 +218,10 @@ export default function App() {
         </div>
       </Section>
 
-      <Section title="Knockout" note="1st plays 4th, 2nd plays 3rd. Winners meet in the final.">
+      <Section
+        title="Knockout"
+        note="1st plays 4th, 2nd plays 3rd. Winners meet in the final."
+      >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-4">
             <MatchCard m={semi1} />

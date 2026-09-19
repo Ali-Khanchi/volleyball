@@ -1,4 +1,4 @@
-# Friday Beach Cup
+# Saturday Volleyball Tournament
 
 <!--
 HOW TO EDIT
@@ -12,21 +12,24 @@ HOW TO EDIT
 -->
 
 ## Teams
-- Sand Sharks
-- Net Ninjas
-- Block Party
-- Dig Deep
+
+- Team Fadhil: Ali F, Mehdi, Usef, Ali K, Basim
+- Team Kazzaz: Hayder K, Emad, Abu Sajjad, Kadzy, Yasser
+- Team Dawoud: Dawoud, Dion, Beschier, Ahmed, Hayder H
+- Team Najim: Najim, Ali J, Ehsan, Abtan, Scotland
 
 ## Round Robin
-- Sand Sharks vs Net Ninjas: 25-20, 25-22
-- Block Party vs Dig Deep: 25-18, 19-25, 15-12
-- Sand Sharks vs Block Party: 25-23, 22-25, 15-13
-- Net Ninjas vs Dig Deep: 25-15, 25-17
-- Sand Sharks vs Dig Deep: 25-12, 25-16
-- Net Ninjas vs Block Party: 20-25, 21-25
+
+- Team Fadhil vs Team Kazzaz:
+- Team Dawoud vs Team Najim:
+- Team Fadhil vs Team Dawoud:
+- Team Kazzaz vs Team Najim:
+- Team Fadhil vs Team Najim:
+- Team Kazzaz vs Team Dawoud:
 
 ## Knockout
-- Semi 1: 25-14, 25-17
+
+- Semi 1:
 - Semi 2:
 - Third place:
 - Final:
