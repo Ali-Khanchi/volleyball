@@ -31,7 +31,7 @@ HOW TO EDIT
 
 - Semi 1: 7-11
 - Semi 2: 7-11
-- Third place:
+- Third place: 9-12
 - Final:
 
 ## Refs
