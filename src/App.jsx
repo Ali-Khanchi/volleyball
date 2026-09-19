@@ -55,6 +55,9 @@ function MatchCard({ m, highlight = false }) {
           {m.sets.map(([x, y]) => `${x}–${y}`).join(', ')}
         </p>
       )}
+      {m.refs && (
+        <p className="mt-2 break-words text-xs text-sand/50">Refs: {m.refs}</p>
+      )}
     </div>
   );
 }

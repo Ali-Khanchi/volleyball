@@ -33,3 +33,16 @@ HOW TO EDIT
 - Semi 2:
 - Third place:
 - Final:
+
+## Refs
+
+- Match 1: Ali F & Mehdi
+- Match 2: Kazaz & Emad
+- Match 3: Sayed Ahmed & Hayder H
+- Match 4: Ali F & Mehdi
+- Match 5: Ali F & Emad
+- Match 6: Kazaz & Emad
+- Semi 1: 
+- Semi 2:
+- Third place:
+- Final:

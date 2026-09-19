@@ -96,6 +96,13 @@ export function parseTournament(md) {
     warnings.push('Add exactly 4 teams under "## Teams".');
   const byName = Object.fromEntries(teams.map((t) => [norm(t), t]));
 
+  const refs = {};
+  for (const line of sections.refs ?? []) {
+    const m = line.match(/^(.+?)\s*(?::\s*(.*))?$/);
+    const s = slug(m[1]);
+    refs[KO_ALIASES[s] ?? s] = (m[2] ?? '').trim();
+  }
+
   // round robin
   const pairKey = (a, b) => [a, b].sort().join('|');
   const rr = new Map();
@@ -120,7 +127,8 @@ export function parseTournament(md) {
   }
   const rrMatches = [...rr.values()].map((m, i) => ({
     ...m,
-    label: `Match ${i + 1}`
+    label: `Match ${i + 1}`,
+    refs: refs[`match${i + 1}`] ?? ''
   }));
   const rrPlayed = rrMatches.filter((m) => m.done).length;
   const rrDone = teams.length === 4 && rrPlayed === rrMatches.length;
@@ -217,6 +225,11 @@ export function parseTournament(md) {
     'Winner of semi-final 1',
     'Winner of semi-final 2'
   );
+
+  semi1.refs = refs.semi1 ?? '';
+  semi2.refs = refs.semi2 ?? '';
+  third.refs = refs.third ?? '';
+  final.refs = refs.final ?? '';
 
   return {
     title,
