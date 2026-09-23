@@ -1,8 +1,4 @@
-import { useEffect, useState } from 'react';
-import { parseTournament, TournamentData, StandingRow, Match } from './parse';
-
-const SRC = `${import.meta.env.BASE_URL}tournament.md`;
-const REFRESH_MS = 15000;
+import { useTournament, StandingRow, Match } from './hooks/useTournament';
 
 interface MatchSide {
   name: string | null;
@@ -76,7 +72,7 @@ function MatchCard({
               {s.name ?? s.hint}
             </span>
             <span className="shrink-0 text-2xl font-extrabold tabular-nums">
-              {m.sets.length ? s.score : '-'}
+              {m.played ? s.score : '-'}
             </span>
           </div>
         ))}
@@ -174,42 +170,14 @@ function Standings({ rows, seeded }: { rows: StandingRow[]; seeded: boolean }) {
 }
 
 export default function App() {
-  const [data, setData] = useState<TournamentData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [, setUpdated] = useState<Date | null>(null);
-
-  useEffect(() => {
-    let stopped = false;
-    const load = async () => {
-      try {
-        const res = await fetch(`${SRC}?t=${Date.now()}`, {
-          cache: 'no-store'
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const parsed = parseTournament(await res.text());
-        if (!stopped) {
-          setData(parsed);
-          setError(null);
-          setUpdated(new Date());
-        }
-      } catch (e: any) {
-        if (!stopped) setError(e.message);
-      }
-    };
-    load();
-    const id = setInterval(load, REFRESH_MS);
-    return () => {
-      stopped = true;
-      clearInterval(id);
-    };
-  }, []);
+  const { data, error, setSelectedEventId } = useTournament();
 
   if (!data) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <p className="wrap-break-word text-sand/70">
           {error
-            ? `Couldn't load tournament.md (${error}). Check that it is in the public folder.`
+            ? `Couldn't load the tournament (${error}). Check your Supabase env vars and that the volleyball schema is exposed.`
             : 'Loading tournament…'}
         </p>
       </main>
@@ -217,6 +185,8 @@ export default function App() {
   }
 
   const {
+    events,
+    selectedEventId,
     title,
     warnings,
     standings,
@@ -230,12 +200,35 @@ export default function App() {
     champion
   } = data;
 
+  // Check if knockout stage has any valid matches scheduled or played
+  const hasKnockout = [semi1, semi2, third, final].some(
+    (m) => m.a !== null || m.b !== null || m.played
+  );
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16">
       <header className="flex items-start justify-between gap-4">
-        <h1 className="wrap-break-word text-4xl font-extrabold tracking-tight sm:text-7xl">
-          {title}
-        </h1>
+        <div className="flex flex-wrap items-center gap-4">
+          <h1 className="wrap-break-word text-4xl font-extrabold tracking-tight sm:text-7xl">
+            {title}
+          </h1>
+
+          {/* Event selection dropdown */}
+          {events.length > 1 && (
+            <select
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(Number(e.target.value))}
+              className="rounded-xl bg-sea-900 px-3 py-2 text-sm font-medium text-sand ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-sun/70"
+            >
+              {events.map((evt) => (
+                <option key={evt.id} value={evt.id}>
+                  {evt.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={() => location.reload()}
@@ -337,21 +330,23 @@ export default function App() {
         </details>
       </Section>
 
-      <Section
-        title="Knockout"
-        note="1st plays 4th, 2nd plays 3rd. Winners meet in the final."
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="min-w-0 space-y-4">
-            <MatchCard m={semi1} />
-            <MatchCard m={semi2} />
+      {hasKnockout && (
+        <Section
+          title="Knockout"
+          note="1st plays 4th, 2nd plays 3rd. Winners meet in the final."
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="min-w-0 space-y-4">
+              <MatchCard m={semi1} />
+              <MatchCard m={semi2} />
+            </div>
+            <div className="flex min-w-0 flex-col justify-center gap-4">
+              <MatchCard m={third} />
+              <MatchCard m={final} highlight />
+            </div>
           </div>
-          <div className="flex min-w-0 flex-col justify-center gap-4">
-            <MatchCard m={third} />
-            <MatchCard m={final} highlight />
-          </div>
-        </div>
-      </Section>
+        </Section>
+      )}
     </main>
   );
 }
