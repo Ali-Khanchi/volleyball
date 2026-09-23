@@ -55,6 +55,9 @@ function MatchCard({
       <div className="mb-3 flex items-center justify-between gap-2 text-sm text-sand/60">
         <span className="min-w-0 truncate font-medium">{m.label}</span>
         <span className={`shrink-0 ${m.done ? 'text-sun' : ''}`}>
+          {m.match_time}
+        </span>
+        <span className={`shrink-0 ${m.done ? 'text-sun' : ''}`}>
           {m.done ? 'Finished' : 'Not played yet'}
         </span>
       </div>

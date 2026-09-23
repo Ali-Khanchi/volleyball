@@ -16,6 +16,7 @@ export interface Match {
   winner: string | null;
   loser: string | null;
   refs: string;
+  match_time: string | null;
 }
 
 export interface StandingRow {
@@ -74,6 +75,18 @@ interface RawMatch {
   refs: string | null;
   team0: TeamRef;
   team1: TeamRef;
+  start_time: string | null;
+}
+
+function formatTime(timeString: string | null) {
+  if (!timeString) return '';
+  const [hoursStr, minutesStr] = timeString.split(':');
+  let hours = parseInt(hoursStr, 10);
+
+  // Convert 24-hour time to 12-hour time
+  hours = hours % 12 || 12;
+
+  return `${hours}:${minutesStr}`;
 }
 
 function toMatch(row: RawMatch, label: string): Match {
@@ -82,6 +95,7 @@ function toMatch(row: RawMatch, label: string): Match {
   const ptsA = row.score0 ?? 0;
   const ptsB = row.score1 ?? 0;
   const played = row.score0 !== null && row.score1 !== null;
+  const match_time = formatTime(row.start_time);
   const win: 0 | 1 | null = played
     ? ptsA > ptsB
       ? 0
@@ -104,7 +118,8 @@ function toMatch(row: RawMatch, label: string): Match {
     done: played && win !== null,
     winner: win !== null ? [a, b][win] : null,
     loser: win !== null ? [a, b][1 - win] : null,
-    refs: row.refs ?? ''
+    refs: row.refs ?? '',
+    match_time
   };
 }
 
@@ -116,7 +131,8 @@ const EMPTY_ROW = (stage: string): RawMatch => ({
   score1: null,
   refs: null,
   team0: null,
-  team1: null
+  team1: null,
+  start_time: null
 });
 
 /**
@@ -166,7 +182,7 @@ export function useTournament(initialEventName?: string) {
       const { data: matchRows, error: matchErr } = await supabase
         .from('matches')
         .select(
-          'id, match_order, stage, score0, score1, refs, team0(id,name), team1(id,name)'
+          'id, match_order, stage, score0, score1, refs, team0(id,name), team1(id,name), start_time'
         )
         .eq('event_id', event.id)
         .order('match_order', { ascending: true });
@@ -260,6 +276,17 @@ export function useTournament(initialEventName?: string) {
       if (rrRows.length === 0)
         warnings.push('No round robin matches found for this event.');
 
+      const hasKnockout = [semi1, semi2, third, final].some(
+        (m) => m.a !== null || m.b !== null || m.played
+      );
+
+      const tableWinner =
+        rrPlayed === rrMatches.length ? standings[0].team : null;
+
+      const champion = hasKnockout ? final.winner : tableWinner;
+
+      console.log(standings[0]);
+
       setData({
         events: eventsList,
         selectedEventId: event.id,
@@ -273,7 +300,7 @@ export function useTournament(initialEventName?: string) {
         semi2,
         third,
         final,
-        champion: final.winner
+        champion
       });
       setError(null);
     } catch (e: any) {
