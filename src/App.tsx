@@ -1,10 +1,25 @@
 import { useEffect, useState } from 'react';
-import { parseTournament } from './parse.js';
+import { parseTournament, TournamentData, StandingRow, Match } from './parse';
 
 const SRC = `${import.meta.env.BASE_URL}tournament.md`;
 const REFRESH_MS = 15000;
 
-function Section({ title, note, children }) {
+interface MatchSide {
+  name: string | null;
+  hint: string | null;
+  score: number;
+  won: boolean;
+}
+
+function Section({
+  title,
+  note,
+  children
+}: {
+  title: string;
+  note?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="mt-10 sm:mt-12">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -16,10 +31,26 @@ function Section({ title, note, children }) {
   );
 }
 
-function MatchCard({ m, highlight = false }) {
-  const sides = [
-    { name: m.a, hint: m.hintA, score: m.ptsA, won: m.done && m.win === 0 },
-    { name: m.b, hint: m.hintB, score: m.ptsB, won: m.done && m.win === 1 }
+function MatchCard({
+  m,
+  highlight = false
+}: {
+  m: Match;
+  highlight?: boolean;
+}) {
+  const sides: MatchSide[] = [
+    {
+      name: m.a,
+      hint: m.hintA ?? null,
+      score: m.ptsA,
+      won: m.done && m.win === 0
+    },
+    {
+      name: m.b,
+      hint: m.hintB ?? null,
+      score: m.ptsB,
+      won: m.done && m.win === 1
+    }
   ];
   return (
     <div
@@ -50,11 +81,6 @@ function MatchCard({ m, highlight = false }) {
           </div>
         ))}
       </div>
-      {/* {m.sets.length > 0 && (
-        <p className="mt-3 wrap-break-word text-sm tabular-nums text-sand/60">
-          {m.sets.map(([x, y]) => `${x}-${y}`).join(', ')}
-        </p>
-      )} */}
       {m.refs && (
         <p className="mt-2 wrap-break-word text-xs text-sand/50">
           Refs: {m.refs}
@@ -65,7 +91,15 @@ function MatchCard({ m, highlight = false }) {
 }
 
 /* Header labels: short on phones, full on larger screens */
-function Head({ short, full, className = '' }) {
+function Head({
+  short,
+  full,
+  className = ''
+}: {
+  short: string;
+  full: string;
+  className?: string;
+}) {
   return (
     <span className={`text-center ${className}`}>
       <span className="sm:hidden">{short}</span>
@@ -74,9 +108,7 @@ function Head({ short, full, className = '' }) {
   );
 }
 
-function Standings({ rows, seeded }) {
-  // Fixed-width stat columns so every row lines up; the team column takes the
-  // remaining space and wraps. "Played" is hidden on phones to save room.
+function Standings({ rows, seeded }: { rows: StandingRow[]; seeded: boolean }) {
   const cols =
     'grid items-center gap-x-1 px-3 sm:gap-x-2 sm:px-4 ' +
     'grid-cols-[minmax(0,1fr)_1.5rem_1.5rem_1.5rem_1.5rem_1.5rem_1.5rem_1.5rem] ' +
@@ -142,9 +174,9 @@ function Standings({ rows, seeded }) {
 }
 
 export default function App() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [updated, setUpdated] = useState(null);
+  const [data, setData] = useState<TournamentData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [, setUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     let stopped = false;
@@ -160,7 +192,7 @@ export default function App() {
           setError(null);
           setUpdated(new Date());
         }
-      } catch (e) {
+      } catch (e: any) {
         if (!stopped) setError(e.message);
       }
     };
@@ -323,4 +355,3 @@ export default function App() {
     </main>
   );
 }
-``;
