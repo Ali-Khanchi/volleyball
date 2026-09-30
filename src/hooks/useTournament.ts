@@ -1,24 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-export interface Match {
-  label: string;
-  stage: string;
-  a: string | null;
-  b: string | null;
-  hintA: string;
-  hintB: string;
-  ptsA: number;
-  ptsB: number;
-  played: boolean;
-  win: 0 | 1 | null;
-  done: boolean;
-  winner: string | null;
-  loser: string | null;
-  refs: string;
-  match_time: string | null;
-}
-
 export interface StandingRow {
   team: string;
   players: string[];
@@ -32,6 +14,7 @@ export interface StandingRow {
 export interface EventItem {
   id: number;
   name: string | null;
+  type: string | null;
 }
 
 export interface TournamentData {
@@ -48,6 +31,7 @@ export interface TournamentData {
   third: Match;
   final: Match;
   champion: string | null;
+  type: string | null;
 }
 
 const HINTS: Record<string, [string, string]> = {
@@ -64,8 +48,6 @@ const STAGE_LABEL: Record<string, string> = {
   final: 'Final'
 };
 
-type TeamRef = { id: number; name: string | null } | null;
-
 interface RawMatch {
   id: number;
   match_order: number | null;
@@ -73,9 +55,44 @@ interface RawMatch {
   score0: number | null;
   score1: number | null;
   refs: string | null;
-  team0: TeamRef;
-  team1: TeamRef;
+  team0: TeamRef | null;
+  team1: TeamRef | null;
   start_time: string | null;
+}
+
+interface TeamRef {
+  id: number;
+  name: string | null;
+  captain: {
+    name: string;
+  } | null;
+  team_memberships: Array<{
+    players: {
+      name: string;
+    } | null;
+  }>;
+}
+
+export interface Match {
+  label: string;
+  stage: string;
+  a: string | null;
+  b: string | null;
+  captainA: string | null; // <-- ADDED
+  captainB: string | null; // <-- ADDED
+  playersA: string[];
+  playersB: string[];
+  hintA: string;
+  hintB: string;
+  ptsA: number;
+  ptsB: number;
+  played: boolean;
+  win: 0 | 1 | null;
+  done: boolean;
+  winner: string | null;
+  loser: string | null;
+  refs: string;
+  match_time: string | null;
 }
 
 function formatTime(timeString: string | null) {
@@ -89,9 +106,25 @@ function formatTime(timeString: string | null) {
   return `${hours}:${minutesStr}`;
 }
 
+function extractPlayerNames(team: TeamRef | null): string[] {
+  if (!team?.team_memberships) return [];
+  return team.team_memberships
+    .map((m) => m.players?.name)
+    .filter((name): name is string => Boolean(name))
+    .sort((a, b) => {
+      if (a === team.captain?.name) return -1;
+      if (b === team.captain?.name) return 1;
+      return a.localeCompare(b);
+    });
+}
+
 function toMatch(row: RawMatch, label: string): Match {
   const a = row.team0?.name ?? null;
   const b = row.team1?.name ?? null;
+  const captainA = row.team0?.captain?.name ?? null;
+  const captainB = row.team1?.captain?.name ?? null;
+  const playersA = extractPlayerNames(row.team0);
+  const playersB = extractPlayerNames(row.team1);
   const ptsA = row.score0 ?? 0;
   const ptsB = row.score1 ?? 0;
   const played = row.score0 !== null && row.score1 !== null;
@@ -104,11 +137,16 @@ function toMatch(row: RawMatch, label: string): Match {
         : null
     : null;
   const [hintA, hintB] = HINTS[row.stage] ?? ['', ''];
+
   return {
     label,
     stage: row.stage,
     a,
     b,
+    captainA, // <-- ADDED
+    captainB, // <-- ADDED
+    playersA,
+    playersB,
     hintA,
     hintB,
     ptsA,
@@ -149,8 +187,8 @@ export function useTournament(initialEventName?: string) {
       // 1. Fetch all available events ordered by date
       const { data: eventsList, error: eventsErr } = await supabase
         .from('events')
-        .select('id, name')
-        .order('date', { ascending: false });
+        .select('id, name, type')
+        .order('date', { ascending: true });
 
       if (eventsErr) throw eventsErr;
       if (!eventsList || eventsList.length === 0)
@@ -182,7 +220,17 @@ export function useTournament(initialEventName?: string) {
       const { data: matchRows, error: matchErr } = await supabase
         .from('matches')
         .select(
-          'id, match_order, stage, score0, score1, refs, team0(id,name), team1(id,name), start_time'
+          `id, match_order, stage, score0, score1, refs, start_time,
+    team0:teams!matches_team0_fkey(
+      id, name,
+      captain:players!teams_captain_id_fkey(name),
+      team_memberships(players(name))
+    ),
+    team1:teams!matches_team1_fkey(
+      id, name,
+      captain:players!teams_captain_id_fkey(name),
+      team_memberships(players(name))
+    )`
         )
         .eq('event_id', event.id)
         .order('match_order', { ascending: true });
@@ -281,11 +329,9 @@ export function useTournament(initialEventName?: string) {
       );
 
       const tableWinner =
-        rrPlayed === rrMatches.length ? standings[0].team : null;
+        rrPlayed === rrMatches.length ? (standings[0]?.team ?? null) : null;
 
       const champion = hasKnockout ? final.winner : tableWinner;
-
-      console.log(standings[0]);
 
       setData({
         events: eventsList,
@@ -300,7 +346,8 @@ export function useTournament(initialEventName?: string) {
         semi2,
         third,
         final,
-        champion
+        champion,
+        type: event.type
       });
       setError(null);
     } catch (e: any) {
