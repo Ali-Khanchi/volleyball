@@ -153,7 +153,7 @@ function toMatch(row: RawMatch, label: string): Match {
     ptsB,
     played,
     win,
-    done: played && win !== null,
+    done: played,
     winner: win !== null ? [a, b][win] : null,
     loser: win !== null ? [a, b][1 - win] : null,
     refs: row.refs ?? '',
@@ -242,6 +242,7 @@ export function useTournament(initialEventName?: string) {
         toMatch(r, `Match ${r.match_order ?? i + 1}`)
       );
       const rrPlayed = rrMatches.filter((m) => m.done).length;
+      console.log(rrMatches);
 
       const teamIds = new Set<number>();
       for (const r of rrRows) {
