@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import MatchCard from './components/MatchCard';
 import Section from './components/Section';
 import SingleMatches from './components/SingleMatch';
-import { useTournament, StandingRow, Match } from './hooks/useTournament';
+import PlayerRankings from './components/PlayerRankings';
+import { useTournament, StandingRow } from './hooks/useTournament';
 
 /* Header labels: short on phones, full on larger screens */
 function Head({
@@ -88,6 +90,9 @@ function Standings({ rows, seeded }: { rows: StandingRow[]; seeded: boolean }) {
 
 export default function App() {
   const { data, error, setSelectedEventId } = useTournament();
+  const [activeTab, setActiveTab] = useState<'tournament' | 'rankings'>(
+    'tournament'
+  );
 
   if (!data) {
     return (
@@ -118,21 +123,20 @@ export default function App() {
     type: eventType
   } = data;
 
-  // Check if knockout stage has any valid matches scheduled or played
   const hasKnockout = [semi1, semi2, third, final].some(
     (m) => m.a !== null || m.b !== null || m.played
   );
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16">
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-wrap items-center gap-4">
           <h1 className="wrap-break-word text-4xl font-extrabold tracking-tight sm:text-7xl">
             {title}
           </h1>
 
           {events.length > 1 && (
-            <div className="w-full">
+            <div className="w-full sm:w-auto">
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(Number(e.target.value))}
@@ -148,26 +152,54 @@ export default function App() {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => location.reload()}
-          aria-label="Refresh"
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-sand/80 transition hover:bg-white/20 active:scale-95 sm:size-11"
-        >
-          <svg
-            className="size-4 sm:size-5"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        <div className="flex items-center gap-3">
+          {/* Navigation Controls */}
+          <div className="inline-flex rounded-xl bg-sea-900 p-1 ring-1 ring-white/10">
+            <button
+              type="button"
+              onClick={() => setActiveTab('tournament')}
+              className={`rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
+                activeTab === 'tournament'
+                  ? 'bg-sun text-sea-950'
+                  : 'text-sand/70 hover:text-sand'
+              }`}
+            >
+              Tournament
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('rankings')}
+              className={`rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
+                activeTab === 'rankings'
+                  ? 'bg-sun text-sea-950'
+                  : 'text-sand/70 hover:text-sand'
+              }`}
+            >
+              Rankings
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => location.reload()}
+            aria-label="Refresh"
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-sand/80 transition hover:bg-white/20 active:scale-95 sm:size-11"
           >
-            <path d="M16 10a6 6 0 1 1-1.76-4.24" />
-            <path d="M16 3v4h-4" />
-          </svg>
-        </button>
+            <svg
+              className="size-4 sm:size-5"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M16 10a6 6 0 1 1-1.76-4.24" />
+              <path d="M16 3v4h-4" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {error && (
@@ -184,7 +216,11 @@ export default function App() {
         </ul>
       )}
 
-      {eventType === '1v1' ? (
+      {activeTab === 'rankings' ? (
+        <div className="mt-8">
+          <PlayerRankings data={data} />
+        </div>
+      ) : eventType === '1v1' ? (
         <SingleMatches tournamentData={data} />
       ) : (
         <>

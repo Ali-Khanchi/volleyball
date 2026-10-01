@@ -32,6 +32,7 @@ export interface TournamentData {
   final: Match;
   champion: string | null;
   type: string | null;
+  allHistoricalMatches: Match[];
 }
 
 const HINTS: Record<string, [string, string]> = {
@@ -187,7 +188,7 @@ export function useTournament(initialEventName?: string) {
       // 1. Fetch all available events ordered by date
       const { data: eventsList, error: eventsErr } = await supabase
         .from('events')
-        .select('id, name, type')
+        .select('id, name, type, date')
         .order('date', { ascending: true });
 
       if (eventsErr) throw eventsErr;
@@ -217,10 +218,11 @@ export function useTournament(initialEventName?: string) {
       // const event = events?.[0];
       // if (!event) throw new Error('No tournament event found');
 
+      // 1. Keep your existing query for the active event matches:
       const { data: matchRows, error: matchErr } = await supabase
         .from('matches')
         .select(
-          `id, match_order, stage, score0, score1, refs, start_time,
+          `id, match_order, stage, score0, score1, refs, start_time, event_id,
     team0:teams!matches_team0_fkey(
       id, name,
       captain:players!teams_captain_id_fkey(name),
@@ -234,7 +236,34 @@ export function useTournament(initialEventName?: string) {
         )
         .eq('event_id', event.id)
         .order('match_order', { ascending: true });
+
       if (matchErr) throw matchErr;
+
+      // 2. Add a separate query to get ALL matches up to the current event date:
+      const { data: historicalMatchRows } = await supabase
+        .from('matches')
+        .select(
+          `id, match_order, stage, score0, score1, refs, start_time, event_id,
+    events!inner(date),
+    team0:teams!matches_team0_fkey(
+      id, name,
+      captain:players!teams_captain_id_fkey(name),
+      team_memberships(players(name))
+    ),
+    team1:teams!matches_team1_fkey(
+      id, name,
+      captain:players!teams_captain_id_fkey(name),
+      team_memberships(players(name))
+    )`
+        )
+        .lte('events.date', event.date ?? new Date().toISOString())
+        .order('events(date)', { ascending: true })
+        .order('match_order', { ascending: true });
+
+      // Convert raw historical rows to Match objects
+      const allHistoricalMatches = (
+        (historicalMatchRows as unknown as RawMatch[]) ?? []
+      ).map((r, i) => toMatch(r, `Match ${r.match_order ?? i + 1}`));
 
       const rows = (matchRows ?? []) as unknown as RawMatch[];
       const rrRows = rows.filter((r) => r.stage === 'round_robin');
@@ -348,7 +377,8 @@ export function useTournament(initialEventName?: string) {
         third,
         final,
         champion,
-        type: event.type
+        type: event.type,
+        allHistoricalMatches
       });
       setError(null);
     } catch (e: any) {
